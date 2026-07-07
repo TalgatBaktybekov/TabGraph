@@ -1,0 +1,19 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# data
+backend/data/
+neo4j/
+*.db
+*.sqlite
+*.sqlite3
+
+# os / editor
+.DS_Store

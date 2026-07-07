@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>TabGraph</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 12px;
+        font-size: 14px;
+      }
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 60px;
+        font: inherit;
+        padding: 6px;
+      }
+      button {
+        margin-top: 6px;
+        padding: 6px 16px;
+        cursor: pointer;
+      }
+      #answer {
+        white-space: pre-wrap;
+        margin-top: 12px;
+        line-height: 1.4;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 1px 8px;
+        border-radius: 9px;
+        color: #fff;
+        margin-top: 12px;
+      }
+      .cypher { background: #2a7; }
+      .subgraph { background: #c80; }
+      pre {
+        background: #f4f4f4;
+        padding: 8px;
+        overflow-x: auto;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .muted { color: #888; }
+      details { margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h3>Ask your tabs</h3>
+    <textarea id="question" placeholder="e.g. Which pages mention Neo4j?"></textarea>
+    <button id="ask">Ask</button>
+    <div id="status" class="muted"></div>
+    <div id="result"></div>
+    <script src="panel.js"></script>
+  </body>
+</html>
