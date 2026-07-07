@@ -25,3 +25,12 @@ Open Chrome's Extensions page, enable Developer mode, and load the `extension/` 
 TabGraph turns browser tabs into a local knowledge graph. The extension first applies privacy checks and captures the main article text instead of the full page chrome (using vendored Readability.js). The backend stores each capture in SQLite, deduplicates it by URL plus text, extracts entities and relationships into staged rows, and resolves mentions to canonical entities with a two-pass strategy: exact normalized-name/alias matching first, then embedding similarity for near matches. If neither pass finds a safe merge, a new canonical entity is created and the decision is logged for review.
 
 Staging stays separate from promotion on purpose, so extraction can be inspected and retried before anything is written into Neo4j. That graph layer is what makes cross-page queries practical: it preserves provenance, supports multi-hop relationships, and powers the QA path, which tries Cypher first and falls back to vector retrieval when needed.
+
+## Ontology
+
+- Shared schema for extraction, validation, and graph loading.
+- Entity types: Person, Organization, Concept, Product, Event.
+- Relation types: WORKS_AT, PART_OF, RELATED_TO, CREATED_BY.
+- Graph shape: Page nodes, canonical entities with aliases/description/embedding, and fact edges with source-page provenance.
+
+The ontology is to be expanded with richer entity and relation types as the project grows. The current version is just for the proof of concept. 
