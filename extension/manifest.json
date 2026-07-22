@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TabGraph",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "description": "Builds a personal knowledge graph from your open browser tabs.",
   "permissions": ["tabs", "storage", "scripting", "sidePanel"],
   "side_panel": {

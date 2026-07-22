@@ -5,7 +5,7 @@
     <style>
       body {
         font-family: system-ui, sans-serif;
-        width: 220px;
+        width: 240px;
         padding: 12px;
       }
       label {
@@ -19,6 +19,32 @@
         font-size: 12px;
         margin-bottom: 0;
       }
+      hr {
+        border: none;
+        border-top: 1px solid #ddd;
+        margin: 12px 0;
+      }
+      input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 5px 6px;
+        margin-bottom: 6px;
+        font: inherit;
+      }
+      button {
+        width: 100%;
+        padding: 6px 0;
+        cursor: pointer;
+        font: inherit;
+      }
+      #promote-status {
+        font-size: 12px;
+        margin-top: 6px;
+        color: #666;
+        min-height: 1em;
+      }
+      .ok { color: #2a7; }
+      .err { color: #c33; }
     </style>
   </head>
   <body>
@@ -26,8 +52,14 @@
       <input type="checkbox" id="capture-toggle" />
       <span>Capture tabs</span>
     </label>
-    <p>Off by default. When on, page URLs (and later, content) are sent to
-      your local TabGraph backend.</p>
+    <p>Off by default. When on, pages you read are staged locally
+      (searchable, but not extracted).</p>
+    <hr />
+    <input type="text" id="project" list="project-list"
+           placeholder="project (optional)" />
+    <datalist id="project-list"></datalist>
+    <button id="promote">Save as evidence</button>
+    <div id="promote-status"></div>
     <script src="popup.js"></script>
   </body>
 </html>

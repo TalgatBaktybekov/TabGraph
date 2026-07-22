@@ -1,6 +1,7 @@
 // TabGraph service worker.
 
-const BACKEND_URL = "http://localhost:8000/ingest";
+const BACKEND = "http://localhost:8000";
+const BACKEND_URL = `${BACKEND}/ingest`;
 const DEBOUNCE_MS = 5000; 
 const MIN_TEXT_LENGTH = 500;
 
@@ -90,6 +91,46 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   pendingTimers.delete(tabId);
 });
 
+// Extract page content and POST it to /ingest. Returns the ingest response
+// body, or throws with a human-readable reason.
+async function extractAndIngest(tab) {
+  const reason = await blockReason(tab.url ?? "");
+  if (reason) throw new Error(`blocked: ${reason}`);
+
+  // Readability returns its result through executeScript.
+  let extracted;
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["lib/Readability.js", "content.js"],
+    });
+    extracted = results?.[0]?.result;
+  } catch (err) {
+    // Some pages block script injection.
+    throw new Error(`injection failed: ${err.message}`);
+  }
+  if (!extracted?.ok) throw new Error(`extraction failed: ${extracted?.error}`);
+  if (extracted.text.length < MIN_TEXT_LENGTH) {
+    throw new Error(`page too short (${extracted.text.length} chars)`);
+  }
+
+  const payload = {
+    url: tab.url,
+    title: extracted.title || tab.title || "",
+    text: extracted.text,
+    html: extracted.html ?? "",
+    timestamp: new Date().toISOString(),
+  };
+  const res = await fetch(BACKEND_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  console.log("[TabGraph] ingest:", res.status, body.status ?? "", tab.url);
+  return body;
+}
+
 async function captureTab(tabId) {
   if (!(await isCaptureEnabled())) {
     console.log("[TabGraph] capture disabled — not sending");
@@ -104,53 +145,44 @@ async function captureTab(tabId) {
     return; // tab closed
   }
 
-  const reason = await blockReason(tab.url ?? "");
-  if (reason) {
-    console.log(`[TabGraph] skipped (${reason}):`, tab.url);
-    return;
-  }
-
-  // Readability returns its result through executeScript.
-  let extracted;
   try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      files: ["lib/Readability.js", "content.js"],
-    });
-    extracted = results?.[0]?.result;
-    console.log("[TabGraph] extracted:", extracted?.text.length ?? 0, "chars");
+    await extractAndIngest(tab);
   } catch (err) {
-    // Some pages block script injection.
-    console.log("[TabGraph] injection failed:", err.message);
-    return;
-  }
-  if (!extracted?.ok) {
-    console.log("[TabGraph] extraction failed:", extracted?.error);
-    return;
-  }
-  if (extracted.text.length < MIN_TEXT_LENGTH) {
-    console.log(
-      `[TabGraph] skipped (only ${extracted.text.length} chars):`,
-      tab.url,
-    );
-    return;
-  }
-
-  const payload = {
-    url: tab.url,
-    title: extracted.title || tab.title || "",
-    text: extracted.text,
-    timestamp: new Date().toISOString(),
-  };
-  try {
-    const res = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const body = await res.json().catch(() => ({}));
-    console.log("[TabGraph] ingest:", res.status, body.status ?? "", tab.url);
-  } catch (err) {
-    console.warn("[TabGraph] ingest failed (backend down?):", err.message);
+    console.log("[TabGraph] capture skipped:", err.message);
   }
 }
+
+// The promote gesture: capture the active tab now (explicit consent — the
+// passive-capture toggle is deliberately not checked; the blocklist is),
+// then mark it as evidence with an optional project.
+async function promoteCurrentTab(project) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) throw new Error("no active tab");
+
+  const ingested = await extractAndIngest(tab);
+  if (ingested.status === "skipped_short") throw new Error(ingested.detail);
+  if (!ingested.id) throw new Error(`ingest returned: ${ingested.status}`);
+
+  const res = await fetch(`${BACKEND}/captures/${ingested.id}/promote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (body.status !== "promoted") {
+    throw new Error(`promote returned: ${body.status ?? res.status}`);
+  }
+  return {
+    ok: true,
+    detail: project ? `saved as evidence → ${project}` : "saved as evidence",
+  };
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type === "promote-current-tab") {
+    promoteCurrentTab(msg.project)
+      .then(sendResponse)
+      .catch((err) => sendResponse({ ok: false, error: err.message }));
+    return true; // keep the message channel open for the async response
+  }
+});

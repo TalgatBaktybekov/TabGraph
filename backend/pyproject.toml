@@ -9,4 +9,10 @@ dependencies = [
     "google-genai>=1.0",
     "sentence-transformers>=3.0",
     "neo4j>=5.20",
+    "networkx>=3.0",
+    "pyyaml>=6.0",
 ]
+
+[project.optional-dependencies]
+# Preferred community-detection backend; networkx Louvain is the fallback.
+leiden = ["leidenalg>=0.10", "igraph>=0.11"]

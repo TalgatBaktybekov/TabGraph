@@ -35,7 +35,29 @@
         margin-top: 12px;
       }
       .cypher { background: #2a7; }
+      .synthesis { background: #46c; }
       .subgraph { background: #c80; }
+      .recall { background: #a5c; }
+      .review-row { margin-top: 4px; font-size: 12px; }
+      .review-btn {
+        margin: 0 0 0 6px;
+        padding: 1px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .confirmed { color: #2a7; }
+      .citations li, .related li { margin: 4px 0; font-size: 13px; }
+      .page-link { color: #46c; }
+      .pair {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin: 6px 0;
+        font-size: 13px;
+      }
+      .pair p { margin: 4px 0; }
+      .tension { border-color: #c66; }
+      h4 { margin: 14px 0 4px; }
       pre {
         background: #f4f4f4;
         padding: 8px;
@@ -53,6 +75,7 @@
     <button id="ask">Ask</button>
     <div id="status" class="muted"></div>
     <div id="result"></div>
+    <div id="discoveries"></div>
     <script src="panel.js"></script>
   </body>
 </html>

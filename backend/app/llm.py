@@ -34,6 +34,11 @@ def qa_model() -> str:
     return os.environ.get("GEMINI_QA_MODEL", "gemini-2.5-flash")
 
 
+def discovery_model() -> str:
+    """Cheap model for the discovery-job LLM judge and community summaries."""
+    return os.environ.get("GEMINI_DISCOVERY_MODEL", "gemini-2.5-flash-lite")
+
+
 def get_client() -> genai.Client:
     global _client
     if _client is None:
